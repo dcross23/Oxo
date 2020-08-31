@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#============================================================================#
-#				"FUNCTIONS"				     #
-#============================================================================#
+#==================================================================================================================================================#
+#							 									    FUNCTIONS	   #
+#==================================================================================================================================================#
 
-#____________________________________________________________ MENU, ARGUMENTS, PERMISSIONS
+#______________________________________________________________________________________________________________ MENU, ARGUMENTS, PERMISSIONS
 
 #Prints the game menu
 function menu(){
@@ -61,7 +61,7 @@ function checkPermissions(){
 }
 
 
-#___________________________________________________________________________ LOAD CONFIG
+#______________________________________________________________________________________________________________ CONFIGURATION
 
 #Checks if "oxo.cfg" config file exists and if it has the 
 # necessary read/write permissions
@@ -91,8 +91,9 @@ function checkConfigFile(){
 	fi
 }
 
+
 #Loads config from "oxo.cfg" config file
-loadConfig(){
+function loadConfig(){
 	#While there is a new line with format:
 	#    ATRIBUTE=VALUE (using IFS equal to "=" delimiter)
 	#  checks new line and tries to load config
@@ -178,11 +179,94 @@ loadConfig(){
 }
 
 
+#Prints a new menu for configuration option
+# It prints what values can the varibles get and their meanings
+function menuConfig(){
+	clear
+	echo "=========================================="
+	echo "|            CONFIGURACION               |"
+	echo "=========================================="
+	echo "-----------------------------------------------------------"
+	echo "|    COMIENZO = 1 -> comienza el humano                   |"
+	echo "|               2 -> comienza la maquina                  |"
+	echo "|               3 -> comienzo aleatorio                   |"
+	echo "-----------------------------------------------------------"
+	echo "|FICHACENTRAL = 1 -> ficha central no se puede mover      |"
+	echo "|               2 -> ficha central se puede mover         |"
+	echo "-----------------------------------------------------------"
+	echo "|ESTADISTICAS = nombre_fichero_estadisticas               |"
+	echo "-----------------------------------------------------------"
+}
 
 
-#============================================================================#
-#				"MAIN PROGRAM"				     #
-#============================================================================#
+#Configuration option
+function configuration(){
+	clear
+	echo "=========================================="
+	echo "|            CONFIGURACION               |"
+	echo "=========================================="
+		
+	echo "Configuración actual:"
+	echo "-----------------------"
+	while IFS== read ATRIBUTO VALOR
+	do
+		echo "$ATRIBUTO = $VALOR"
+				
+	done < oxo.cfg
+	echo "-----------------------"
+	echo ""
+
+	read -p "¿Quiere cambiar la configuración actual?[S para cambiar]: " SN
+	if test "$SN" = "S" -o "$SN" = "s"
+	then
+		sleep 1
+		menuConfig
+		
+		echo "Introduzca los nuevos valores:"
+	
+		COMIENZO=0 
+		until test $COMIENZO -eq 1 -o $COMIENZO -eq 2 -o $COMIENZO -eq 3
+		do
+			read -p "COMIENZO = " COMIENZO 
+		done	
+		
+		FICHACENTRAL=0
+		until test $FICHACENTRAL -eq 1 -o $FICHACENTRAL -eq 2
+		do
+			read -p "FICHACENTRAL = " FICHACENTRAL 
+		done
+		
+		AUX=".log"
+		while test $AUX = ".log"
+		do                            
+			read -p "ESTADISTICAS (nombre sin extensión) = " AUX 
+			AUX="$AUX.log"
+		done
+
+		#If the new name is different to the old name and there is not 
+		#  a file with the new name, it just ranames it
+		if test $AUX != $ESTADISTICAS -a ! -f $AUX
+		then 
+			mv $ESTADISTICAS $AUX	
+		fi
+
+		ESTADISTICAS=$AUX
+		echo "COMIENZO=$COMIENZO" > oxo.cfg
+		echo "FICHACENTRAL=$FICHACENTRAL" >> oxo.cfg
+		echo "ESTADISTICAS=$ESTADISTICAS" >> oxo.cfg
+	fi
+}
+
+#______________________________________________________________________________________________________________ STATS
+
+
+
+#______________________________________________________________________________________________________________ GAME
+
+
+#==================================================================================================================================================#
+#							 									  MAIN PROGRAM	   #
+#==================================================================================================================================================#
 
 #Args check
 if test $# -gt 1 
@@ -216,7 +300,7 @@ do
 	
 	echo ""
 	case $OPTION in
-		"C" | "c") exit #config
+		"C" | "c") configuration
 		;;
 		
 		"J" | "j") exit #game
